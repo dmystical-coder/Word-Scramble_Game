@@ -4,6 +4,9 @@ import ScrambledWord from "./components/ScrambledWord";
 import Guess from "./components/Guess";
 import Feedback from "./components/Feedback";
 import Display from "./components/Display";
+import Timer from "./components/Timer";
+import Score from "./components/Score";
+import Hint from "./components/Hint";
 
 const App = () => {
   // Predefine a WordList
@@ -14,6 +17,8 @@ const App = () => {
   const [originalWord, setOriginalWord] = useState("");
   const [guess, setGuess] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [isGameOver, setIsGameOver] = useState(false);
 
   // function to scramble a word
@@ -35,6 +40,11 @@ const App = () => {
       setFeedback("Correct! Well done.");
       setGuess("");
       setWordList(prevWordList => prevWordList.filter(word => word !== originalWord));
+      setScore(score + 10); // Increment score for correct guess
+      setTimeout(() => {
+        getRandomWord(); // Load the next word
+        setGuess(""); // Clear the input field
+      }, 1000);
     } else {
       setFeedback("Incorrect! Try again.");
     }
@@ -46,8 +56,23 @@ const App = () => {
     // remove the scrambled word from the WordList
   }, []);
 
+  // Timer countdown
+  useEffect(() => {
+    if (timeLeft === 0) {
+      setIsGameOver(true);
+    } else if (!isGameOver) {
+      const timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [timeLeft, isGameOver]);
 
-  console.log(wordList);
+  // Hint functionality
+  const showHint = () => {
+    alert(`Hint: The first letter is "${originalWord[0]}"`);
+  };
+
   return (
     <div>
       <Display />
@@ -57,10 +82,13 @@ const App = () => {
           <Guess guess={guess} setGuess={setGuess} />
           <button onClick={checkGuess}>Submit Guess</button>
           <Feedback feedback={feedback} />
+          <Score score={score} />
+          <Timer timeLeft={timeLeft} />
+          <Hint showHint={showHint} />
         </>
       ) : (
         <div>
-          <h2>Game Over!</h2>
+          <h2>Game Over! Your final score is {score}</h2>
         </div>
       )}
     </div>
